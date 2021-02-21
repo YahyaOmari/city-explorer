@@ -48,9 +48,43 @@ function CityLocation (searchQuery, displayName, lat, lon) {
     this.formatted_query = lat;
     this.longitude= lon;
 }
+// -----------------------------
+// -----------------------------
+// -----------------------------
+// -----------------------------
+
+// routes - endpoints
+app.get("/weather", handleWeather);
+
+//handle functions
+function handleWeather(req,res) {
+
+    let weatherObject = getWeatherData();
+    res.status(200).send(weatherObject);
+}
+
+// handle data for functions
+function getWeatherData() {
+    let weatherData = require("./data/weather.json");
+    let castArray = [];
+    let casting = weatherData.data;
+
+    for (let i = 0; i < casting.length; i++) {
+        let newDateTime = new Date(casting[i].valid_date).toString();
+        let stringDate = newDateTime.split(" ").splice(0,4).join(" ");
+        let obj = new DataWeather(casting[i].weather.description, stringDate);
+        castArray.push(obj);
+    }
+    return castArray;
+}
+
+function DataWeather(casting, timing) {
+    this.forecast = casting;
+    this.time = timing;
+
+}
 
 
 app.listen(PORT, ()=> {
     console.log(`The server is listening ${PORT}`);
 });
-
