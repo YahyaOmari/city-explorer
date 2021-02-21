@@ -31,6 +31,9 @@ Actual time needed to complete: _____
 
 ## Architecture
 <!-- Provide a detailed description of the application design. What technologies (languages, libraries, etc) you're using, and any other relevant design information. -->
+1. Using JavaScript.
+2. Using backend.
+3. Printed the forecast, and time.
 
 ## Change Log
 <!-- Use this area to document the iterative changes made to your application as each feature is successfully implemented. Use time stamps. Here's an examples:
@@ -39,4 +42,7 @@ Actual time needed to complete: _____
 
 ## Credits and Collaborations
 <!-- Give credit (and a link) to other people or resources that helped you build this application. -->
--->
+
+
+# [Live URL (Location!) ](https://cityexplorer-omari.herokuapp.com/location)
+# [Live URL (Click me!) ](https://cityexplorer-omari.herokuapp.com/Weather)
