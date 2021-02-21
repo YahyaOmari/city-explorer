@@ -1,14 +1,13 @@
 # city-explorer
 
-Number and name of feature: ________________________________
+Number and name of feature: Feature 1,2
+Estimate of time needed to complete: 2 hours
 
-Estimate of time needed to complete: _____
+Start time: 3:50
 
-Start time: _____
+Finish time: 4.50
 
-Finish time: _____
-
-Actual time needed to complete: _____
+Actual time needed to complete: 1 hour
 
 # city-explorer
 
