@@ -26,7 +26,8 @@ Actual time needed to complete: _____
 4. Created .env file.
 5. .gitignore - with standard NodeJS configurations.
 6. Created server.js.
-
+7. npm init, then continue the steps.
+8. Deploy it to heroku.
 
 ## Architecture
 <!-- Provide a detailed description of the application design. What technologies (languages, libraries, etc) you're using, and any other relevant design information. -->

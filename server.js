@@ -1,0 +1,15 @@
+'use strict';
+
+// require statements (importing packages)
+let express = require('express');
+
+// initialications
+let app = express();
+
+require('dotenv').config();
+
+const PORT = process.env.PORT;
+
+app.listen(PORT, ()=> {
+    console.log("the app is listening ...");
+});
