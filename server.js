@@ -15,12 +15,19 @@ const PORT = process.env.PORT;
 
 // routes - endpoints
 app.get("/location", handleLocation);
+app.get("/weather", handleWeather);
+app.get("*", handleError);
 
 // handler functions
 function handleLocation(req,res) {
-    let searchQuery = req.query.city;
-    let locationObject = getLocationData(searchQuery);
-    res.status(200).send(locationObject);
+    try{
+        let searchQuery = req.query.city;
+        let locationObject = getLocationData(searchQuery);
+        res.status(200).send(locationObject);
+    }
+    catch(error){
+        res.app(500).send("Sorry the page doesn't exist ..."  + error)
+    }
 
     // let locationData =  require("./data/location.json");
 
@@ -53,14 +60,15 @@ function CityLocation (searchQuery, displayName, lat, lon) {
 // -----------------------------
 // -----------------------------
 
-// routes - endpoints
-app.get("/weather", handleWeather);
 
 //handle functions
 function handleWeather(req,res) {
-
-    let weatherObject = getWeatherData();
-    res.status(200).send(weatherObject);
+    try {
+        let weatherObject = getWeatherData();
+        res.status(200).send(weatherObject);
+    } catch (error){
+        res.status(500).send("Sorry the page doesn't exist ..." + error)
+    }
 }
 
 // handle data for functions
@@ -82,6 +90,9 @@ function DataWeather(casting, timing) {
     this.forecast = casting;
     this.time = timing;
 
+}
+function handleError(req,res) {
+    res.status(404).send("Sorry the page doesn't exist ... 404");    
 }
 
 
