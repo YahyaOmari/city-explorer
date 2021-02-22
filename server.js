@@ -30,12 +30,6 @@ function handleLocation(req,res) {
     catch(error){
         res.app(500).send("Sorry the page doesn't exist ..."  + error)
     }
-
-    // let locationData =  require("./data/location.json");
-
-    // // get values from object
-    // let longitude = locationData[0].lon;
-    // let latitude = locationData[0].lon;
 }
 // handle data for functions
 function getLocationData(searchQuery, res) {
@@ -64,14 +58,6 @@ function getLocationData(searchQuery, res) {
     });
 
     // let locationData =  require("./data/location.json");
-
-
-    // // get values from object
-    // let longitude = locationData[0].lon;
-    // let latitude = locationData[0].lat;
-    // let displayName = locationData[0].display_name;
-    // let responseObject = new CityLocation(searchQuery, displayName, latitude, longitude);
-    // return responseObject;
 }
 // constructor
 function CityLocation (searchQuery, displayName, lat, lon) {
@@ -84,7 +70,7 @@ function CityLocation (searchQuery, displayName, lat, lon) {
 // --------------------------------------------------------------------
 // -----------------------------WEATHER--------------------------------
 // --------------------------------------------------------------------
-// --------------------------------------------------------------------
+// -------------------------------------------------------------------- 
 
 
 // routes - endpoints
@@ -100,26 +86,22 @@ function handleWeather(req,res) {
 
 // handle data for functions
 function getWeatherData(res,latit, logit) {
-
-        try{
-            let weatherQuery = {
-                lat: latit ,
-                lon: logit ,
-                key: process.env.WEATHER_API_KEY
-            }
-            let weatherUrl = 'https://api.weatherbit.io/v2.0/forecast/daily';
-            // let weatherData = require("./data/weather.json");
-        
-        
-            superagent.get(weatherUrl).query(weatherQuery).then(data =>{
-                let castArray = [];
-                let casting = data.body.data;
-                // console.log(casting);
-                
+    try{
+        let weatherQuery = {
+            lat: latit ,
+            lon: logit ,
+            key: process.env.WEATHER_API_KEY
+        }
+        let weatherUrl = 'https://api.weatherbit.io/v2.0/forecast/daily';
+        // let weatherData = require("./data/weather.json");
+        superagent.get(weatherUrl).query(weatherQuery).then(data =>{
+            let castArray = [];
+            let casting = data.body.data;
+            // console.log(casting);
             for (let i = 0; i < casting.length; i++) {
                 let newDateTime = new Date(casting[i].valid_date).toString();
                 let stringDate = newDateTime.split(" ").splice(0,4).join(" ");
-
+                
                 let obj = new DataWeather(casting[i].weather.description, stringDate);
                 castArray.push(obj);
             }
@@ -142,10 +124,52 @@ function DataWeather(casting, timing) {
 function handleError(req,res) {
     res.status(404).send("Sorry the page doesn't exist ... 404");    
 }
+// --------------------------------------------------------------------
+// --------------------------------------------------------------------
+// -----------------------------PARK-----------------------------------
+// --------------------------------------------------------------------
+// -------------------------------------------------------------------- 
 
+// routes - endpoints
+app.get('/parks', handlePark);
+
+function handlePark(req, res) {
+    console.log('amman')
+    console.log(req.query,'query');
+    let searchQuery = req.query.search_query;
+    getParkData(searchQuery).then(data =>{
+        return res.status(200).send(data);
+    });
+}
+
+function getParkData(name){
+    const parkQuery = {
+      'api_key':process.env.PARKS_API_KEY,
+      'q':name
+    }
+    let parkUrl = 'https://developer.nps.gov/api/v1/parks';
+    return superagent.get(parkUrl).query(parkQuery)
+    .then(data =>{
+      let parkArray = data.body.data.map(element => {
+        return new DataPark(element.fullName, Object.values(element.addresses[0]).join(' '),element.entranceFees.cost,element.description,element.url);
+      });
+      return parkArray;
+    }).catch(error =>{
+        return error;
+    })
+}
+  
+
+function DataPark(name, address, fee, description, url) {
+    this.name = name;
+    this.address = address;
+    this.fee = fee;
+    this.description = description;
+    this.url = url;
+}
 
 // routes - endpoints -- error 404
-// app.get("*", handleError);
+app.get("*", handleError);
 
 app.listen(PORT, ()=> {
     console.log(`The server is listening ${PORT}`);
