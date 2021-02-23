@@ -1,5 +1,7 @@
 # city-explorer
 
+## lab06
+
 Number and name of feature: Feature 1,2
 Estimate of time needed to complete: 2 hours
 
@@ -9,6 +11,16 @@ Finish time: 4.50
 
 Actual time needed to complete: 1 hour
 
+## lab07
+
+Number and name of feature: Feature 1,2
+Estimate of time needed to complete: 3 hours
+
+Start time: 2:40
+
+Finish time: 5.50
+
+Actual time needed to complete: 6 hour
 # city-explorer
 
 **Author**: Yahya Omari
@@ -37,10 +49,12 @@ Actual time needed to complete: 1 hour
 ## Change Log
 <!-- Use this area to document the iterative changes made to your application as each feature is successfully implemented. Use time stamps. Here's an examples:
 
-01-01-2001 4:59pm - Application now has a fully-functional express server, with a GET route for the location resource.
+01-01-2001 4:59pm - Application now has a fully-functional express server, with a GET route for the location resource. -->
 
-## Credits and Collaborations
-<!-- Give credit (and a link) to other people or resources that helped you build this application. -->
+## Credits go for: 
+- LocationQ, took for them API.
+- Weatherbit.io, took for them API.
+- National Park Service, took for them API.
 
 
 # [Live URL (Location!) ](https://cityexplorer-omari.herokuapp.com/location)
