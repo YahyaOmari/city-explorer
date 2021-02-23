@@ -148,8 +148,7 @@ function getParkData(name){
       'q':name
     }
     let parkUrl = 'https://developer.nps.gov/api/v1/parks';
-    return superagent.get(parkUrl).query(parkQuery)
-    .then(data =>{
+    return superagent.get(parkUrl).query(parkQuery).then(data =>{
       let parkArray = data.body.data.map(element => {
         return new DataPark(element.fullName, Object.values(element.addresses[0]).join(' '),element.entranceFees.cost,element.description,element.url);
       });
