@@ -13,7 +13,7 @@ Actual time needed to complete: 1 hour
 
 ## lab07
 
-Number and name of feature: Feature 1,2
+Number and name of feature: Feature 1,3,4 and 5
 Estimate of time needed to complete: 3 hours
 
 Start time: 2:40
