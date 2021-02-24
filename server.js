@@ -45,11 +45,11 @@ function getLocationData(searchQuery, res) {
         if(data.rowCount !== 0){
             let locationObject = new CityLocation(data.rows[0].city_name,
                 data.rows[0].formatted_query,
-                data.rows[0].display_name,
-                data.rows[0].lat, 
-                data.rows[0].lon,
-                );
-                res.status(200).send(locationObject);
+
+                 data.rows[0].lat, 
+                 data.rows[0].lon,
+                 );
+                 res.status(200).send(locationObject);
         } else {
             
             // get the data array from json
@@ -65,13 +65,13 @@ function getLocationData(searchQuery, res) {
                 // try{
                     let longitude = data.body[0].lon;
                     let latitude = data.body[0].lat;
-                    let display_name = data.body[0].display_name;
-                    let responseObject = new CityLocation(searchQuery, display_name, latitude, longitude);        
+                    let displayName = data.body[0].display_name;
+                    let responseObject = new CityLocation(searchQuery, displayName, latitude, longitude);        
                     res.status(200).send(responseObject);
                     // console.log("Before the dbQuery");
 
-                    let dbQuery = `INSERT INTO city (city_name, display_name , lon, lat) VALUES ($1, $2, $3, $4) RETURNING *`;
-                    let safeValues = [searchQuery, display_name , longitude, latitude];
+                    let dbQuery = `INSERT INTO city (city_name, lon, lat) VALUES ($1, $2, $3) RETURNING *`;
+                    let safeValues = [searchQuery, longitude, latitude];
                     // console.log("After the dbQuery");
 
                     client.query(dbQuery,safeValues).then(data=>{
@@ -92,9 +92,9 @@ function getLocationData(searchQuery, res) {
     // let locationData =  require("./data/location.json");
 
 // constructor
-function CityLocation (searchQuery, display_name, lat, lon) {
+function CityLocation (searchQuery, displayName, lat, lon) {
     this.search_query = searchQuery;
-    this.formatted_query = display_name;
+    this.formatted_query = displayName;
     this.latitude = lat;
     this.longitude= lon;
 }
@@ -167,6 +167,8 @@ app.get('/parks', handlePark);
 
 //handle functions
 function handlePark(req, res) {
+    // console.log('amman')
+    // console.log(req.query,'query');
     let searchQuery = req.query.search_query;
     getParkData(searchQuery).then(data =>{
         return res.status(200).send(data);
@@ -208,4 +210,3 @@ client.connect(). then(()=>{
 })
 // routes - endpoints -- error 404
 app.get("*", handleError);
-
