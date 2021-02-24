@@ -38,7 +38,7 @@ function handleLocation(req,res) {
 // handle data for functions
 function getLocationData(searchQuery, res) {
 
-    let checkExist = 'SELECT * FROM city WHERE city_name =$1';
+    let checkExist = 'SELECT * FROM city WHERE city_name =$1;';
     let values = [searchQuery];
     // psql -d <database-name> -f <path/to/filename>
 
@@ -46,10 +46,10 @@ function getLocationData(searchQuery, res) {
         if(data.rowCount !== 0){
             let locationObject = new CityLocation(data.rows[0].city_name,
                 data.rows[0].formatted_query,
-
-                 data.rows[0].lat, 
-                 data.rows[0].lon,
+                data.rows[0].lon,
+                 data.rows[0].lat
                  );
+                 console.log("This data is coming from DB");
                  res.status(200).send(locationObject);
         } else {
             
@@ -62,32 +62,29 @@ function getLocationData(searchQuery, res) {
             };
             let url = `https://eu1.locationiq.com/v1/search.php`;
         
-            return superagent.get(url).query(query).then(data => {
-                // try{
+            superagent.get(url).query(query).then(data => {
                     let longitude = data.body[0].lon;
                     let latitude = data.body[0].lat;
-                    let displayName = data.body[0].display_name;
-                    let responseObject = new CityLocation(searchQuery, displayName, latitude, longitude);        
-                    res.status(200).send(responseObject);
-                    // console.log("Before the dbQuery");
+                    let display_name = data.body[0].display_name;
+                    let responseObject = new CityLocation(searchQuery, display_name, latitude, longitude); 
 
-                    let dbQuery = `INSERT INTO city (city_name, lon, lat) VALUES ($1, $2, $3) RETURNING *`;
-                    let safeValues = [searchQuery, longitude, latitude];
-                    // console.log("After the dbQuery");
+                    let dbQuery = `INSERT INTO city (city_name, display_name, lon, lat) VALUES ($1, $2, $3, $4);`;
+                    let safeValues = [searchQuery, display_name , longitude, latitude];
 
                     client.query(dbQuery,safeValues).then(data=>{
-                    // console.log("After Client Query");
-                      console.log('Data is connected and gave me this data ..  ',data.rows);
                     }).catch(error=>{
                       console.log('An error to connect '+ error);
                     });
-        
-                res.status(200).send('The latitude value is ' + latitude + ' and the longitude is '+longitude);
+                    console.log("This data is from API .. ");
+                
+                res.status(200).send(responseObject);
                 
             }).catch(error => {
                 res.status(500).send("There was an error getting from API...catch  for superagent ... " + error);
             });
         }
+    }).catch(error=>{
+        res.status(500).send(error);
     });
 }
     // let locationData =  require("./data/location.json");
@@ -95,7 +92,7 @@ function getLocationData(searchQuery, res) {
 // constructor
 function CityLocation (searchQuery, displayName, lat, lon) {
     this.search_query = searchQuery;
-    this.formatted_query = displayName;
+    this.display_name = displayName;
     this.latitude = lat;
     this.longitude= lon;
 }
