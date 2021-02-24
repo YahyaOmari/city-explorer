@@ -34,6 +34,7 @@ function handleLocation(req,res) {
         res.app(500).send("Sorry the page doesn't exist ... handleLocation ..."  + error)
     }
 }
+
 // handle data for functions
 function getLocationData(searchQuery, res) {
 
@@ -200,6 +201,55 @@ function DataPark(name, address, fee, description, url) {
     this.description = description;
     this.url = url;
 }
+// Movie routes
+app.get("/movies", handleMovie);
+
+function handleMovie(req, res) {
+    let searchQuery = req.query.search_query;
+    // Accessing the data from the movie API
+    getMovieData(searchQuery, res);
+}
+function getMovieData(searchQuery, res) {
+
+    // Using data from API
+    let movieQuery={
+      api_key: process.env.MOVIE_API_KEY,
+      query: searchQuery,
+    }
+
+    
+  
+    let movieUrl = `https://api.themoviedb.org/3/search/movie`;
+    superagent.get(movieUrl).query(movieQuery).then(data => {
+      try {
+        let movieArray = data.body.results;
+        let movieObject = [];
+
+        movieArray.map(movieValue => {
+          let imageDisplay = 'https://image.tmdb.org/t/p/w500' + movieValue.poster_path ;
+          let responseObject = new Movie(movieValue.title, movieValue.overview, movieValue.vote_average, movieValue.vote_count, imageDisplay, movieValue.popularity, movieValue.release_date);
+          movieObject.push(responseObject);
+        })
+        res.status(200).send(movieObject);
+  
+      } catch {
+        console.log('Something went wrong with  try in superagent... ' + error);
+      }
+    }).catch(error=> {
+        console.log('Something went wrong with  superagent ... ' + error);
+    })
+  }
+
+function Movie(title, overview, avgVotes, totalVotes, image, popularity, released) {
+    this.title = title;
+    this.overview = overview;
+    this.average_votes =  avgVotes;
+    this.total_votes = totalVotes;
+    this.image_url = image;
+    this.popularity = popularity;
+    this.released_on = released;
+}
+
 
 client.connect(). then(()=>{
     app.listen(PORT, ()=> {
