@@ -14,6 +14,8 @@ require('dotenv').config();
 const client = new pg.Client(process.env.DATABASE_URL);
 
 // const client = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
+
+
 const PORT = process.env.PORT;
 
 
@@ -199,6 +201,113 @@ function DataPark(name, address, fee, description, url) {
     this.fee = fee;
     this.description = description;
     this.url = url;
+}
+// --------------------------------------------------------------------
+// --------------------------------------------------------------------
+// -----------------------------MOVIE----------------------------------
+// --------------------------------------------------------------------
+// -------------------------------------------------------------------- 
+// Movie routes
+app.get("/movies", handleMovie);
+
+function handleMovie(req, res) {
+    let searchQuery = req.query.search_query;
+
+    getMovieData(searchQuery, res);
+}
+function getMovieData(searchQuery, res) {
+
+    let movieQuery={
+      api_key: process.env.MOVIE_API_KEY,
+      query: searchQuery,
+    }
+    
+    let movieUrl = `https://api.themoviedb.org/3/search/movie`;
+    superagent.get(movieUrl).query(movieQuery).then(data => {
+      try {
+        let movieArray = data.body.results;
+        let movieObject = [];
+
+        movieArray.map(movieValue => {
+          let imageDisplay = 'https://image.tmdb.org/t/p/w500' + movieValue.poster_path ;
+          let responseObject = new Movie(movieValue.title, movieValue.overview, movieValue.vote_average, movieValue.vote_count, imageDisplay, movieValue.popularity, movieValue.release_date);
+          movieObject.push(responseObject);
+        })
+        res.status(200).send(movieObject);
+  
+      } catch {
+        console.log('Everything is good in superagent... ' + error);
+      }
+    }).catch(error=> {
+        console.log('Something went wrong with  superagent ... ' + error);
+    })
+}
+
+function Movie(title, overview, avgVotes, totalVotes, image, popularity, released) {
+    this.title = title;
+    this.overview = overview;
+    this.average_votes =  avgVotes;
+    this.total_votes = totalVotes;
+    this.image_url = image;
+    this.popularity = popularity;
+    this.released_on = released;
+}
+
+
+// --------------------------------------------------------------------
+// --------------------------------------------------------------------
+// -----------------------------Yelp-----------------------------------
+// --------------------------------------------------------------------
+// -------------------------------------------------------------------- 
+
+// Yelp routes
+app.get("/yelp", handleYelp);
+
+function handleYelp(req, res) {
+  // Accessing the data from the yelp API
+  getYelpData(req, res);
+}
+
+function getYelpData(req,res) {
+  // Using data from API
+  let y = req.query.page;
+  let x = 0 + y * 5;
+  let yelpQuery = {
+    term: "restaurants",
+    location: req.query.search_query,
+    limit: 5,
+    offset: x
+}
+
+  let key={Authorization : `Bearer ${process.env.YELP_API_KEY}`}
+
+  let yelpUrl = `https://api.yelp.com/v3/businesses/search`
+
+  superagent.get(yelpUrl).set(key).query(yelpQuery).then(Data => {
+    try {
+      let yelpArray = Data.body.businesses;
+      let arrayOfObject = [];
+
+      yelpArray.map(valueYelp => {
+
+        let responseObject = new DataYelp(valueYelp.name, valueYelp.image_url, valueYelp.price, valueYelp.rating, valueYelp.url);
+        arrayOfObject.push(responseObject);
+      })
+      res.status(200).send(arrayOfObject);
+    } catch {
+        console.log('Everything is good in superagent... ' + error);
+      }
+    }).catch(error=> {
+        console.log('Something went wrong with  superagent ... ' + error);
+    })
+}
+
+function DataYelp(name, image_url, price, rating, url) {
+  this.name = name;
+  this.image_url = image_url;
+  this.price = price;
+  this.rating = rating;
+  this.url = url;
 }
 
 client.connect(). then(()=>{
