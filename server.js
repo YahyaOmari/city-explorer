@@ -45,11 +45,11 @@ function getLocationData(searchQuery, res) {
         if(data.rowCount !== 0){
             let locationObject = new CityLocation(data.rows[0].city_name,
                 data.rows[0].formatted_query,
-                data.rows[0].displayName,
-                data.rows[0].lat, 
-                data.rows[0].lon,
-                );
-                res.status(200).send(locationObject);
+
+                 data.rows[0].lat, 
+                 data.rows[0].lon,
+                 );
+                 res.status(200).send(locationObject);
         } else {
             
             // get the data array from json
@@ -70,7 +70,7 @@ function getLocationData(searchQuery, res) {
                     res.status(200).send(responseObject);
                     // console.log("Before the dbQuery");
 
-                    let dbQuery = `INSERT INTO city (city_name, displayName , lon, lat) VALUES ($1, $2, $3, $4) RETURNING *`;
+                    let dbQuery = `INSERT INTO city (city_name, lon, lat) VALUES ($1, $2, $3) RETURNING *`;
                     let safeValues = [searchQuery, longitude, latitude];
                     // console.log("After the dbQuery");
 
@@ -167,6 +167,8 @@ app.get('/parks', handlePark);
 
 //handle functions
 function handlePark(req, res) {
+    // console.log('amman')
+    // console.log(req.query,'query');
     let searchQuery = req.query.search_query;
     getParkData(searchQuery).then(data =>{
         return res.status(200).send(data);
@@ -208,4 +210,3 @@ client.connect(). then(()=>{
 })
 // routes - endpoints -- error 404
 app.get("*", handleError);
-
