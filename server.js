@@ -11,9 +11,9 @@ const pg = require('pg');
 let app = express();
 app.use(cors());
 require('dotenv').config();
-// const client = new pg.Client(process.env.DATABASE_URL);
+const client = new pg.Client(process.env.DATABASE_URL);
 
-const client = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
+// const client = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
 
 
 const PORT = process.env.PORT;
@@ -36,11 +36,10 @@ function handleLocation(req,res) {
         res.app(500).send("Sorry the page doesn't exist ... handleLocation ..."  + error)
     }
 }
-
 // handle data for functions
 function getLocationData(searchQuery, res) {
 
-    let checkExist = 'SELECT * FROM city WHERE city_name =$1;';
+    let checkExist = 'SELECT * FROM city WHERE city_name =$1';
     let values = [searchQuery];
     // psql -d <database-name> -f <path/to/filename>
 
@@ -48,10 +47,10 @@ function getLocationData(searchQuery, res) {
         if(data.rowCount !== 0){
             let locationObject = new CityLocation(data.rows[0].city_name,
                 data.rows[0].formatted_query,
-                data.rows[0].lon,
-                 data.rows[0].lat
+
+                 data.rows[0].lat, 
+                 data.rows[0].lon,
                  );
-                 console.log("This data is coming from DB");
                  res.status(200).send(locationObject);
         } else {
             
@@ -64,29 +63,32 @@ function getLocationData(searchQuery, res) {
             };
             let url = `https://eu1.locationiq.com/v1/search.php`;
         
-            superagent.get(url).query(query).then(data => {
+            return superagent.get(url).query(query).then(data => {
+                // try{
                     let longitude = data.body[0].lon;
                     let latitude = data.body[0].lat;
-                    let display_name = data.body[0].display_name;
-                    let responseObject = new CityLocation(searchQuery, display_name, latitude, longitude); 
+                    let displayName = data.body[0].display_name;
+                    let responseObject = new CityLocation(searchQuery, displayName, latitude, longitude);        
+                    res.status(200).send(responseObject);
+                    // console.log("Before the dbQuery");
 
-                    let dbQuery = `INSERT INTO city (city_name, display_name, lon, lat) VALUES ($1, $2, $3, $4);`;
-                    let safeValues = [searchQuery, display_name , longitude, latitude];
+                    let dbQuery = `INSERT INTO city (city_name, lon, lat) VALUES ($1, $2, $3) RETURNING *`;
+                    let safeValues = [searchQuery, longitude, latitude];
+                    // console.log("After the dbQuery");
 
                     client.query(dbQuery,safeValues).then(data=>{
+                    // console.log("After Client Query");
+                      console.log('Data is connected and gave me this data ..  ',data.rows);
                     }).catch(error=>{
                       console.log('An error to connect '+ error);
                     });
-                    console.log("This data is from API .. ");
-                
-                res.status(200).send(responseObject);
+        
+                res.status(200).send('The latitude value is ' + latitude + ' and the longitude is '+longitude);
                 
             }).catch(error => {
                 res.status(500).send("There was an error getting from API...catch  for superagent ... " + error);
             });
         }
-    }).catch(error=>{
-        res.status(500).send(error);
     });
 }
     // let locationData =  require("./data/location.json");
@@ -94,7 +96,7 @@ function getLocationData(searchQuery, res) {
 // constructor
 function CityLocation (searchQuery, displayName, lat, lon) {
     this.search_query = searchQuery;
-    this.display_name = displayName;
+    this.formatted_query = displayName;
     this.latitude = lat;
     this.longitude= lon;
 }
@@ -200,24 +202,26 @@ function DataPark(name, address, fee, description, url) {
     this.description = description;
     this.url = url;
 }
+// --------------------------------------------------------------------
+// --------------------------------------------------------------------
+// -----------------------------MOVIE----------------------------------
+// --------------------------------------------------------------------
+// -------------------------------------------------------------------- 
 // Movie routes
 app.get("/movies", handleMovie);
 
 function handleMovie(req, res) {
     let searchQuery = req.query.search_query;
-    // Accessing the data from the movie API
+
     getMovieData(searchQuery, res);
 }
 function getMovieData(searchQuery, res) {
 
-    // Using data from API
     let movieQuery={
       api_key: process.env.MOVIE_API_KEY,
       query: searchQuery,
     }
-
     
-  
     let movieUrl = `https://api.themoviedb.org/3/search/movie`;
     superagent.get(movieUrl).query(movieQuery).then(data => {
       try {
@@ -232,12 +236,12 @@ function getMovieData(searchQuery, res) {
         res.status(200).send(movieObject);
   
       } catch {
-        console.log('Something went wrong with  try in superagent... ' + error);
+        console.log('Everything is good in superagent... ' + error);
       }
     }).catch(error=> {
         console.log('Something went wrong with  superagent ... ' + error);
     })
-  }
+}
 
 function Movie(title, overview, avgVotes, totalVotes, image, popularity, released) {
     this.title = title;
@@ -249,6 +253,62 @@ function Movie(title, overview, avgVotes, totalVotes, image, popularity, release
     this.released_on = released;
 }
 
+
+// --------------------------------------------------------------------
+// --------------------------------------------------------------------
+// -----------------------------Yelp-----------------------------------
+// --------------------------------------------------------------------
+// -------------------------------------------------------------------- 
+
+// Yelp routes
+app.get("/yelp", handleYelp);
+
+function handleYelp(req, res) {
+  // Accessing the data from the yelp API
+  getYelpData(req, res);
+}
+
+function getYelpData(req,res) {
+  // Using data from API
+  let y = req.query.page;
+  let x = 0 + y * 5;
+  let yelpQuery = {
+    term: "restaurants",
+    location: req.query.search_query,
+    limit: 5,
+    offset: x
+}
+
+  let key={Authorization : `Bearer ${process.env.YELP_API_KEY}`}
+
+  let yelpUrl = `https://api.yelp.com/v3/businesses/search`
+
+  superagent.get(yelpUrl).set(key).query(yelpQuery).then(Data => {
+    try {
+      let yelpArray = Data.body.businesses;
+      let arrayOfObject = [];
+
+      yelpArray.map(valueYelp => {
+
+        let responseObject = new DataYelp(valueYelp.name, valueYelp.image_url, valueYelp.price, valueYelp.rating, valueYelp.url);
+        arrayOfObject.push(responseObject);
+      })
+      res.status(200).send(arrayOfObject);
+    } catch {
+        console.log('Everything is good in superagent... ' + error);
+      }
+    }).catch(error=> {
+        console.log('Something went wrong with  superagent ... ' + error);
+    })
+}
+
+function DataYelp(name, image_url, price, rating, url) {
+  this.name = name;
+  this.image_url = image_url;
+  this.price = price;
+  this.rating = rating;
+  this.url = url;
+}
 
 client.connect(). then(()=>{
     app.listen(PORT, ()=> {
