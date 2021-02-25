@@ -11,9 +11,9 @@ const pg = require('pg');
 let app = express();
 app.use(cors());
 require('dotenv').config();
-// const client = new pg.Client(process.env.DATABASE_URL);
+const client = new pg.Client(process.env.DATABASE_URL);
 
-const client = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
+// const client = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
 
 
 const PORT = process.env.PORT;
@@ -50,46 +50,44 @@ function getLocationData(searchQuery, res) {
 
                  data.rows[0].lat, 
                  data.rows[0].lon + "This is the output from  constructor ");
-            let locationObject = new CityLocation(data.rows[0].city_name,
-                data.rows[0].display_name,
+                 let locationObject = new CityLocation(data.rows[0].city_name,
+                    data.rows[0].display_name,
+                    data.rows[0].lat, 
+                    data.rows[0].lon
+                    );
+                    res.status(200).send(locationObject);
+                } else {
+                    // get the data array from json
+                    let query = {
+                    key:process.env.GEOCODE_API_KEY,
+                    q : searchQuery,
+                    limit: 1,
+                    format: 'json'
+                };
+                let url = `https://eu1.locationiq.com/v1/search.php`;
+                
+                return superagent.get(url).query(query).then(data => {
+                    // try{
+                        let longitude = data.body[0].lon;
+                        let latitude = data.body[0].lat;
+                        let displayName = data.body[0].display_name;
+                        console.log(displayName + "This is the displayname");
+                        let responseObject = new CityLocation(searchQuery, displayName, latitude, longitude);        
+                        res.status(200).send(responseObject);
+                        // console.log("Before the dbQuery");
 
-                 data.rows[0].lat, 
-                 data.rows[0].lon
-                 );
-                 res.status(200).send(locationObject);
-        } else {
+                        let dbQuery = `INSERT INTO city (city_name, lon, lat) VALUES ($1, $2, $3) RETURNING *`;
+                        let safeValues = [searchQuery, longitude, latitude];
+                        // console.log("After the dbQuery");
+
+                        client.query(dbQuery,safeValues).then(data=>{
+                        // console.log("After Client Query");
+                        console.log('Data is connected and gave me this data ..  ',data.rows);
+                        }).catch(error=>{
+                        console.log('An error to connect '+ error);
+                        });
             
-            // get the data array from json
-            let query = {
-                key:process.env.GEOCODE_API_KEY,
-                q : searchQuery,
-                limit: 1,
-                format: 'json'
-            };
-            let url = `https://eu1.locationiq.com/v1/search.php`;
-        
-            return superagent.get(url).query(query).then(data => {
-                // try{
-                    let longitude = data.body[0].lon;
-                    let latitude = data.body[0].lat;
-                    let displayName = data.body[0].display_name;
-                    console.log(displayName + "This is the displayname");
-                    let responseObject = new CityLocation(searchQuery, displayName, latitude, longitude);        
-                    res.status(200).send(responseObject);
-                    // console.log("Before the dbQuery");
-
-                    let dbQuery = `INSERT INTO city (city_name, lon, lat) VALUES ($1, $2, $3) RETURNING *`;
-                    let safeValues = [searchQuery, longitude, latitude];
-                    // console.log("After the dbQuery");
-
-                    client.query(dbQuery,safeValues).then(data=>{
-                    // console.log("After Client Query");
-                      console.log('Data is connected and gave me this data ..  ',data.rows);
-                    }).catch(error=>{
-                      console.log('An error to connect '+ error);
-                    });
-        
-                res.status(200).send('The latitude value is ' + latitude + ' and the longitude is '+longitude);
+                    res.status(200).send('The latitude value is ' + latitude + ' and the longitude is '+longitude);
                 
             }).catch(error => {
                 res.status(500).send("There was an error getting from API...catch  for superagent ... " + error);
@@ -138,14 +136,14 @@ function getWeatherData(res,latit, logit) {
             let castArray = [];
             let casting = data.body.data;
             // console.log(casting);
-            for (let i = 0; i < casting.length; i++) {
-                let newDateTime = new Date(casting[i].valid_date).toString();
+            
+            casting.map(weatherValue => {
+                let newDateTime = new Date(weatherValue.valid_date).toString();
                 let stringDate = newDateTime.split(" ").splice(0,4).join(" ");
                 
-                let obj = new DataWeather(casting[i].weather.description, stringDate);
+                let obj = new DataWeather(weatherValue.weather.description, stringDate);
                 castArray.push(obj);
-            }
-            // console.log(castArray);
+            })
             res.status(200).send(castArray);
         }).catch(error=>{
             res.status(500).send(error);
