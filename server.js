@@ -11,9 +11,9 @@ const pg = require('pg');
 let app = express();
 app.use(cors());
 require('dotenv').config();
-const client = new pg.Client(process.env.DATABASE_URL);
+// const client = new pg.Client(process.env.DATABASE_URL);
 
-// const client = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
+const client = new pg.Client({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
 
 
 const PORT = process.env.PORT;
@@ -45,11 +45,16 @@ function getLocationData(searchQuery, res) {
 
     client.query(checkExist, values).then(data=> {
         if(data.rowCount !== 0){
-            let locationObject = new CityLocation(data.rows[0].city_name,
-                data.rows[0].formatted_query,
+            console.log(data.rows[0].city_name,
+                data.rows[0].display_name,
 
                  data.rows[0].lat, 
-                 data.rows[0].lon,
+                 data.rows[0].lon + "This is the output from  constructor ");
+            let locationObject = new CityLocation(data.rows[0].city_name,
+                data.rows[0].display_name,
+
+                 data.rows[0].lat, 
+                 data.rows[0].lon
                  );
                  res.status(200).send(locationObject);
         } else {
@@ -68,6 +73,7 @@ function getLocationData(searchQuery, res) {
                     let longitude = data.body[0].lon;
                     let latitude = data.body[0].lat;
                     let displayName = data.body[0].display_name;
+                    console.log(displayName + "This is the displayname");
                     let responseObject = new CityLocation(searchQuery, displayName, latitude, longitude);        
                     res.status(200).send(responseObject);
                     // console.log("Before the dbQuery");
